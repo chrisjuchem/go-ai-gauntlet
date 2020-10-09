@@ -4,9 +4,10 @@ from PIL.ImageDraw import ImageDraw
 STONE_SIZE = 30
 BOARD_SIZE = 19
 
-BOARD = [[None] * BOARD_SIZE] * BOARD_SIZE
-BOARD[4][4] = 1
-BOARD[3][16] = 2
+BOARD = [[None] * BOARD_SIZE for i in range(BOARD_SIZE)] 
+BOARD[3][3] = 1
+BOARD[2][15] = 2
+BOARD[2][16] = 4 
 
 STARPOINTS = [(3,3), (3,9), (3,15), (9,3), (9,9), (9,15), (15,3), (15,9), (15,15)]
 
@@ -31,5 +32,23 @@ for i in range(BOARD_SIZE):
 
 for p in STARPOINTS:
     draw.ellipse(box(4,4,pix(p)), BLACK)
+
+for x in range(BOARD_SIZE):
+    for y in range(BOARD_SIZE):
+        stone = BOARD[x][y]
+        center = pix((x, y))
+        place = box(STONE_SIZE-4, STONE_SIZE-4, pix((x, y)))
+        if stone:
+            draw.ellipse(
+                place,
+                outline=BLACK,
+                fill=(BLACK if stone % 2 == 1 else WHITE),
+            )
+            text_offset = draw.textsize(str(stone))
+            draw.text(
+                (center[0] - text_offset[0]/2, center[1] - text_offset[1]/2),
+                str(stone),
+                fill=(BLACK if stone % 2 == 0 else WHITE),
+            )
 
 im.show()
