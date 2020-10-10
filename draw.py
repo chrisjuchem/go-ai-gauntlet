@@ -1,6 +1,8 @@
 from PIL import Image
 from PIL.ImageDraw import ImageDraw
+from math import ceil
 from functools import reduce
+import string
 
 STONE_SIZE = 30
 
@@ -15,10 +17,10 @@ def box(w,h,center):
 def pix(coords):
     return (STONE_SIZE * (coords[0] + 0.5), STONE_SIZE * (coords[1] + 0.5)) 
 
-def draw_game(game):
-    BOARD_SIZE = len(game.board)
-    im = Image.new("RGB", [STONE_SIZE * BOARD_SIZE] * 2, (235,222,151))
-    draw = ImageDraw(im)
+def draw_game(game, dur=50):
+    BOARD_SIZE = game.board.size
+    base = Image.new("RGB", [STONE_SIZE * (BOARD_SIZE + 1)] * 2, (235,222,151))
+    draw = ImageDraw(base)
 
     min_pix = STONE_SIZE / 2
     max_pix = STONE_SIZE * (BOARD_SIZE - 0.5) 
@@ -28,36 +30,42 @@ def draw_game(game):
         draw.line(((x, min_pix), (x, max_pix)), BLACK)
     for p in STARPOINTS:
         draw.ellipse(box(4,4,pix(p)), BLACK)
+    for txt, pt in [(str(BOARD_SIZE-n), (BOARD_SIZE, n)) for n in range(BOARD_SIZE)] + \
+            [(string.ascii_uppercase[n], (n, BOARD_SIZE)) for n in range(BOARD_SIZE)]:
+        center = pix(pt)
+        text_offset = draw.textsize(txt)
+        draw.text(
+            (center[0] - text_offset[0]/2, center[1] - text_offset[1]/2),
+            txt,
+            fill=BLACK,
+        )
 
-    stones = []
-    for x in range(BOARD_SIZE):
-        for y in range(BOARD_SIZE):
-            stone = game.board[x][y]
-            if stone:
-                stones.append((stone, (x,y)))
-    stones.sort(key=lambda x: x[0])
+    ims = [base]
+    moves = [(m[0], m[1], game.moves+2) for m in game.board if m[0]] + \
+        game.w_prisoners + game.b_prisoners
+    for i in range(game.moves):
+        mv_num = i+1
 
-    ims = [im]
-    for stone in stones:
-        new_im = ims[-1].copy()
+        new_im = base.copy()
         ims.append(new_im)
         draw = ImageDraw(new_im)
     
-        mv_num, pt = stone
-        center = pix(pt)
-        place = box(STONE_SIZE-4, STONE_SIZE-4, pix(pt))
+        for n, pt, capd in moves:
+            if n <= mv_num and mv_num < capd:
+                center = pix(pt)
+                place = box(STONE_SIZE-4, STONE_SIZE-4, pix(pt)) 
 
-        draw.ellipse(
-            place,
-            outline=BLACK,
-            fill=(BLACK if mv_num % 2 == 1 else WHITE),
-        )
-        text_offset = draw.textsize(str(mv_num))
-        draw.text(
-            (center[0] - text_offset[0]/2, center[1] - text_offset[1]/2),
-            str(mv_num),
-            fill=(BLACK if mv_num % 2 == 0 else WHITE),
-        )
+                draw.ellipse(
+                    place,
+                    outline=BLACK,
+                    fill=(BLACK if n % 2 == 1 else WHITE),
+                )
+                text_offset = draw.textsize(str(n))
+                draw.text(
+                    (center[0] - text_offset[0]/2, center[1] - text_offset[1]/2),
+                    str(n),
+                    fill=(BLACK if n % 2 == 0 else WHITE),
+            )
 
-    ims += [ims[-1]] * 10
-    ims[0].save("gif.gif", save_all=True, append_images=ims[1:], duration=100, loop=0)
+    ims += [ims[-1]] * ceil(5000/dur)
+    base.save("gif.gif", save_all=True, append_images=ims, duration=dur, loop=0)

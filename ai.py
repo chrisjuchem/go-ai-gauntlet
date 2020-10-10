@@ -1,5 +1,6 @@
 from draw import draw_game
 import random
+import itertools
 
 class HumanAI:
     def move(self, game):
@@ -17,13 +18,29 @@ class HumanAI:
 class RandomAI:
     def move(self, game):
         i=0
-        while True:
+        while i<15:
             i+=1
             x = random.randrange(game.size)
             y = random.randrange(game.size)
-            try: 
+            try:
                 game.move(x, y)
                 print(i, " attempts")
                 return
             except RuntimeError:
                 continue
+            except KeyboardInterrupt as k:
+                draw_game(game)
+                raise k
+        i=0
+        allmoves = list(itertools.product(range(game.size), range(game.size)))
+        random.shuffle(allmoves)
+        for mv in allmoves:
+            i+=1
+            try:
+                game.move(mv[0], mv[1])
+                print(i, " brute force attempts")
+                return
+            except RuntimeError:
+                continue
+        print("PASS")
+        game.passs()

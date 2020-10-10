@@ -2,6 +2,10 @@ from game import Game
 from ai import HumanAI, RandomAI
 from draw import draw_game
 
-g = Game(RandomAI(), RandomAI())
+SIZE = 19
+g = Game(RandomAI(), RandomAI(), size = SIZE)
+
 g.autoplay()
-draw_game(g)
+draw_game(g,
+    #dur=500
+)

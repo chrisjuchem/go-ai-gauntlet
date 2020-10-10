@@ -1,17 +1,51 @@
 from draw import draw_game
 
+class BoardIter:
+    def __init__(self, board):
+        self.board = board
+        self.x = 0
+        self.y = 0
+    def __next__(self):
+        if self.y >= self.board.size:
+            self.y = 0
+            self.x += 1
+        if self.x >= self.board.size:
+            raise StopIteration()
+        ret = self.board[self.x][self.y], (self.x,self.y)
+        self.y += 1
+        return ret
+
+class Board:
+    def __init__(self, size):
+        self.size = size
+        self.board = [[None] * size for i in range(size)]
+
+    def __iter__(self):
+        return BoardIter(self)
+
+    def __getitem__(self, x):
+        if isinstance(x, int):
+            return self.board[x] # board[x] of board[x][y]
+        else:
+            return self.board[x[0]][x[1]]  # board[(x, y)]
+
+    def __setitem__(self, key, value):
+        #[x][y] form only needs the gen implemented, the set is on the inner list
+        self.board[key[0]][key[1]] = value
 
 
 class Game:
     def __init__(self, b_ai=None, w_ai=None, size=19):
-        self.board = [[None] * size for i in range(size)]
+        self.board = Board(size)
         self.ko = None
         self.w_prisoners = []
         self.b_prisoners = []
         self.moves = 0
         self.b_ai = b_ai
         self.w_ai = w_ai
-        self.size = size
+        self.size = size #remove
+        self.komi = 6.5
+        self.passes = 0
 
     def group(self, point, color):
         grp = []
@@ -19,7 +53,7 @@ class Game:
         todo = [point]
         while len(todo) > 0:
             next_pt = todo.pop()
-            next_st = self.board[next_pt[0]][next_pt[1]]
+            next_st = self.board[next_pt]
             if (next_st and next_st % 2) == color:
                 grp.append(next_pt)
                 for n in self.neighbors(next_pt):
@@ -42,9 +76,13 @@ class Game:
         return ns
 
     def autoplay(self):
-        for i in range(100): # while not game over
-            self.b_ai.move(self)
-            self.w_ai.move(self)
+        while self.score() is None:
+            (self.b_ai if self.moves % 2 == 1 else self.w_ai).move(self)
+        print("Game over: {}".format(self.score()))
+
+    def passs(self):
+        self.moves += 1
+        self.passes += 1
 
     def move(self, x, y):
         if self.board[x][y]:
@@ -59,14 +97,11 @@ class Game:
         caps = set()
         for n in self.neighbors((x, y)):
             group, libs = self.group(n, (self.moves+1) % 2)
-            # if all([(self.board[l[0]][l[1]] and 
-            #             (self.board[l[0]][l[1]] % 2 == self.moves % 2))
-            #         for l in libs]):
-            if not any([self.board[l[0]][l[1]] is None for l in libs]): 
+            if not any([self.board[l] is None for l in libs]): 
                 caps.update(group)
         if len(caps) == 0:
             _, self_libs = self.group((x,y), (self.moves) % 2)
-            if not any([self.board[l[0]][l[1]] is None for l in self_libs]):
+            if not any([self.board[l] is None for l in self_libs]):
                 # Suicide - undo
                 self.moves -= 1
                 self.board[x][y] = None
@@ -77,5 +112,37 @@ class Game:
             self.ko = None
         for c in caps:
             prisoners = self.w_prisoners if self.moves % 2 == 1 else self.b_prisoners
-            prisoners.append((self.board[c[0]][c[1]], c))
-            self.board[c[0]][c[1]] = None
+            prisoners.append((self.board[c], c, self.moves))
+            self.board[c] = None
+        self.passes = 0
+
+    # need somthing else to figure out if the game is over, this counts 1 eye groups as alive
+    def score(self):
+        if self.moves <10: #TODO more elegant way of not giving a score in the beginning of the game
+            return None
+        b=0
+        w=self.komi
+        emptys = set()
+        #TODO gotta kill off the ded groups
+        for stone, pos in self.board:
+            if stone is None:
+                emptys.add(pos)
+            elif stone % 2 == 1:
+                b+=1
+            else:
+                w+=1
+        while len(emptys) > 0:
+            pt = emptys.pop()
+            pts, edge = self.group(pt, None)
+
+            if all([self.board[l] % 2 == 0 for l in edge]):
+                w += len(pts)
+                emptys = emptys.difference(set(pts))
+            elif all([self.board[l] % 2 == 1 for l in edge]):
+                b += len(pts)
+                emptys = emptys.difference(set(pts))
+            else:
+                if self.passes <= 1:
+                    return None
+
+        return b-w
