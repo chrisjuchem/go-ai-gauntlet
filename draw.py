@@ -3,6 +3,7 @@ from PIL.ImageDraw import ImageDraw
 from math import ceil
 from functools import reduce
 import string
+from collections import defaultdict
 
 STONE_SIZE = 30
 
@@ -43,29 +44,36 @@ def draw_game(game, dur=50):
     ims = [base]
     moves = [(m[0], m[1], game.moves+2) for m in game.board if m[0]] + \
         game.w_prisoners + game.b_prisoners
-    for i in range(game.moves):
-        mv_num = i+1
-
-        new_im = base.copy()
+    moves.sort(key=lambda x:x[0])
+    caps = defaultdict(lambda:[])
+    for _, pt, cap_mv in game.w_prisoners + game.b_prisoners:
+        caps[cap_mv].append(pt)
+    
+    for n, pt, _ in moves:
+        new_im = ims[-1].copy()
         ims.append(new_im)
         draw = ImageDraw(new_im)
     
-        for n, pt, capd in moves:
-            if n <= mv_num and mv_num < capd:
-                center = pix(pt)
-                place = box(STONE_SIZE-4, STONE_SIZE-4, pix(pt)) 
+        center = pix(pt)
+        place = box(STONE_SIZE-4, STONE_SIZE-4, pix(pt)) 
 
-                draw.ellipse(
-                    place,
-                    outline=BLACK,
-                    fill=(BLACK if n % 2 == 1 else WHITE),
-                )
-                text_offset = draw.textsize(str(n))
-                draw.text(
-                    (center[0] - text_offset[0]/2, center[1] - text_offset[1]/2),
-                    str(n),
-                    fill=(BLACK if n % 2 == 0 else WHITE),
-            )
+        draw.ellipse(
+            place,
+            outline=BLACK,
+            fill=(BLACK if n % 2 == 1 else WHITE),
+        )
+        text_offset = draw.textsize(str(n))
+        draw.text(
+            (center[0] - text_offset[0]/2, center[1] - text_offset[1]/2),
+            str(n),
+            fill=(BLACK if n % 2 == 0 else WHITE),
+        )
+        #captures
+        for cap in caps[n]:
+            tl,br = box(STONE_SIZE, STONE_SIZE, pix(cap))
+            size = (int(tl[0]), int(tl[1]), int(br[0]), int(br[1]))
+            patch = base.copy().crop(size)
+            new_im.paste(patch, size)
 
     ims += [ims[-1]] * ceil(5000/dur)
     base.save("gif.gif", save_all=True, append_images=ims, duration=dur, loop=0)
