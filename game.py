@@ -11,7 +11,7 @@ class BoardIter:
             self.x += 1
         if self.x >= self.board.size:
             raise StopIteration()
-        ret = self.board[self.x][self.y], (self.x,self.y)
+        ret = (self.board[self.x][self.y], (self.x,self.y))
         self.y += 1
         return ret
 
@@ -76,9 +76,10 @@ class Game:
         return ns
 
     def autoplay(self):
-        while self.score() is None:
+        while self.passes < 2:
             (self.b_ai if self.moves % 2 == 1 else self.w_ai).move(self)
         print("Game over: {}".format(self.score()))
+        print("{} moves".format(self.moves))
 
     def passs(self):
         self.moves += 1
@@ -118,8 +119,8 @@ class Game:
 
     # need somthing else to figure out if the game is over, this counts 1 eye groups as alive
     def score(self):
-        if self.moves <10: #TODO more elegant way of not giving a score in the beginning of the game
-            return None
+        # if self.moves <10: #TODO more elegant way of not giving a score in the beginning of the game
+        #     return None
         b=0
         w=self.komi
         emptys = set()
@@ -141,8 +142,7 @@ class Game:
             elif all([self.board[l] % 2 == 1 for l in edge]):
                 b += len(pts)
                 emptys = emptys.difference(set(pts))
-            else:
-                if self.passes <= 1:
-                    return None
+            # else:
+            #     return None
 
         return b-w

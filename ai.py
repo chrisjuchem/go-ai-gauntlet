@@ -16,7 +16,26 @@ class HumanAI:
         game.move(x, y)
         
 class RandomAI:
+    def passs(self, game):
+        # give up if the game has progressed and all of someone's stones are captures
+        if game.moves < 2:
+            return False
+        b = False
+        w = False
+        for stone, _ in game.board:
+            if stone:
+                if stone % 2 == 1:
+                    b = True
+                else:
+                    w = True
+                if b and w:
+                    return False
+        return True
+
     def move(self, game):
+        if self.passs(game):
+            game.passs()
+            return
         i=0
         while i<15:
             i+=1
@@ -32,7 +51,7 @@ class RandomAI:
                 draw_game(game)
                 raise k
         i=0
-        allmoves = list(itertools.product(range(game.size), range(game.size)))
+        allmoves = [pt for m, pt in game.board if m is None]
         random.shuffle(allmoves)
         for mv in allmoves:
             i+=1
