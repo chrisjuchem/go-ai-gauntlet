@@ -41,25 +41,15 @@ class RandomAI:
             i+=1
             x = random.randrange(game.size)
             y = random.randrange(game.size)
-            try:
-                game.move(x, y)
-                print(i, " attempts")
+            if game.move(x, y):
+                # print(i, " attempts")
                 return
-            except RuntimeError:
-                continue
-            except KeyboardInterrupt as k:
-                draw_game(game)
-                raise k
         i=0
         allmoves = [pt for m, pt in game.board if m is None]
         random.shuffle(allmoves)
         for mv in allmoves:
             i+=1
-            try:
-                game.move(mv[0], mv[1])
-                print(i, " brute force attempts")
+            if game.move(mv[0], mv[1]):
+                # print(i, " brute force attempts")
                 return
-            except RuntimeError:
-                continue
-        print("PASS")
         game.passs()

@@ -86,27 +86,34 @@ class Game:
         self.passes += 1
 
     def move(self, x, y):
+        "Returns: successful move "
         if self.board[x][y]:
-            raise RuntimeError("Point taken")
+            return False
+            # raise RuntimeError("Point taken")
         if (x,y) == self.ko:
-            raise RuntimeError("Ko move")
+            return False
+            # raise RuntimeError("Ko move")
         
         self.moves += 1
         self.board[x][y] = self.moves
 
         # self.capture
         caps = set()
-        for n in self.neighbors((x, y)):
+        neighs = set(self.neighbors((x, y)))
+        while len(neighs) > 0:
+            n = neighs.pop()
             group, libs = self.group(n, (self.moves+1) % 2)
             if not any([self.board[l] is None for l in libs]): 
                 caps.update(group)
+            neighs = neighs.difference(group)
         if len(caps) == 0:
             _, self_libs = self.group((x,y), (self.moves) % 2)
             if not any([self.board[l] is None for l in self_libs]):
                 # Suicide - undo
                 self.moves -= 1
                 self.board[x][y] = None
-                raise RuntimeError("Suicide")
+                return False
+                # raise RuntimeError("Suicide")
         if len(caps) == 1:
             self.ko = list(caps)[0]
         else:
@@ -116,6 +123,7 @@ class Game:
             prisoners.append((self.board[c], c, self.moves))
             self.board[c] = None
         self.passes = 0
+        return True
 
     # need somthing else to figure out if the game is over, this counts 1 eye groups as alive
     def score(self):

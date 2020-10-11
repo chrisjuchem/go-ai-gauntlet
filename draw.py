@@ -20,7 +20,7 @@ def pix(coords):
 
 def draw_game(game, dur=50):
     BOARD_SIZE = game.board.size
-    base = Image.new("RGB", [STONE_SIZE * (BOARD_SIZE + 1)] * 2, (235,222,151))
+    base = Image.new("P", [STONE_SIZE * (BOARD_SIZE + 1)] * 2, (235,222,151))
     draw = ImageDraw(base)
 
     min_pix = STONE_SIZE / 2
