@@ -1,12 +1,12 @@
 from draw import draw_game
 import random
 import itertools
+from debug import debug
 
 class AI:
     def __init__(self, game, color):
         self.game = game
         self.color = color # 0 or 1
-
 
 class HumanAI(AI):
     def move(self):
@@ -45,8 +45,10 @@ class HeuristicAI(AI):
 
     def move(self):
         allmoves = [pt for m, pt in self.game.board if m is None and self.candidate(pt)]
+        debug("candidates done")
         random.shuffle(allmoves)
         allmoves.sort(key=self.priority)
+        debug("sort done")
         for mv in allmoves:
             if not self.reject(mv) and self.game.move(mv[0], mv[1]):
                 return
@@ -56,4 +58,25 @@ class HeuristicAI(AI):
 class RandomAI(HeuristicAI):
     name = "random-ai"
 
-ALL = [RandomAI]
+class OddDiagonalAI(HeuristicAI):
+    name = "odd-diagonal"
+    def priority(self, mv):
+        return (mv[0] + mv[1]) % 2
+
+class EvenDiagonalAI(HeuristicAI):
+    name = "even-diagonal"
+    def priority(self, mv):
+        return (mv[0] + mv[1] + 1) % 2
+
+class AlphabeticalAI(HeuristicAI):
+    name = "alphabetical"
+    def priority(self, mv):
+        return (mv[0] * 100 - mv[1]) 
+
+class ReverseAlphabeticalAI(AlphabeticalAI):
+    name = "reverse-alphabetical"
+    def priority(self, mv):
+        return super(ReverseAlphabeticalAI, self).priority(mv) * -1 
+
+
+ALL = [RandomAI, OddDiagonalAI, EvenDiagonalAI, AlphabeticalAI]

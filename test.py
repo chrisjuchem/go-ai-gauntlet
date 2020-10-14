@@ -3,7 +3,7 @@ import ai
 from draw import draw_game
 
 SIZE = 19
-g = Game(size = SIZE)
+g = Game(ai.AlphabeticalAI, ai.ReverseAlphabeticalAI, size=SIZE)
 
 try:
     g.autoplay()
@@ -13,4 +13,4 @@ try:
 except KeyboardInterrupt as k:
     print("drawing partial game")
     draw_game(g)
-    raise k
+    # raise k

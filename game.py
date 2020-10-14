@@ -1,5 +1,6 @@
 from draw import draw_game
 from ai import RandomAI
+from debug import debug
 
 class BoardIter:
     def __init__(self, board):
@@ -93,8 +94,9 @@ class Game:
         return True
 
     def autoplay(self):
-        while self.passes < 2 and not self.total_domination():
-            (self.b_ai if self.moves % 2 == 1 else self.w_ai).move()
+        while self.passes < 2 and self.moves < 2000 and not self.total_domination():
+            debug(self.moves)
+            (self.b_ai if self.moves % 2 == 0 else self.w_ai).move()
         print("Game over: {}".format(self.score()))
         print("{} moves".format(self.moves))
 
