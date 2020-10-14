@@ -1,9 +1,9 @@
 from game import Game
-from ai import HumanAI, RandomAI
+import ai
 from draw import draw_game
 
 SIZE = 19
-g = Game(RandomAI(), RandomAI(), size = SIZE)
+g = Game(size = SIZE)
 
 try:
     g.autoplay()

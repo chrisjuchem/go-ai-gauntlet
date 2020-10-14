@@ -7,8 +7,6 @@ from collections import defaultdict
 
 STONE_SIZE = 30
 
-STARPOINTS = [(3,3), (3,9), (3,15), (9,3), (9,9), (9,15), (15,3), (15,9), (15,15)]
-
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 
@@ -18,9 +16,32 @@ def box(w,h,center):
 def pix(coords):
     return (STONE_SIZE * (coords[0] + 0.5), STONE_SIZE * (coords[1] + 0.5)) 
 
+def starpoints(sz):
+    if sz > 12:
+        d = 4
+    else:
+        d = 3
+    pts = [
+        (d-1, d-1),
+        (sz-d, sz-d),
+        (sz-d, d-1),
+        (d-1, sz-d),
+        (sz//2, sz//2),
+        (sz, sz) # decorative
+    ]
+    if sz > 14:
+        pts += [
+            (d-1, sz//2),
+            (sz//2, d-1),
+            (sz-d, sz//2),
+            (sz//2, sz-d),
+        ]
+    return pts
+
 def draw_game(game, dur=50):
     BOARD_SIZE = game.board.size
-    base = Image.new("P", [STONE_SIZE * (BOARD_SIZE + 1)] * 2, (235,222,151))
+    img_size = (STONE_SIZE * (BOARD_SIZE + 1), STONE_SIZE * (BOARD_SIZE + 2))
+    base = Image.new("P", img_size, (235,222,151))
     draw = ImageDraw(base)
 
     min_pix = STONE_SIZE / 2
@@ -29,7 +50,7 @@ def draw_game(game, dur=50):
         x = (i + 0.5) * STONE_SIZE
         draw.line(((min_pix, x), (max_pix, x)), BLACK)
         draw.line(((x, min_pix), (x, max_pix)), BLACK)
-    for p in STARPOINTS:
+    for p in starpoints(BOARD_SIZE):
         draw.ellipse(box(4,4,pix(p)), BLACK)
     for txt, pt in [(str(BOARD_SIZE-n), (BOARD_SIZE, n)) for n in range(BOARD_SIZE)] + \
             [(string.ascii_uppercase[n], (n, BOARD_SIZE)) for n in range(BOARD_SIZE)]:
@@ -40,6 +61,19 @@ def draw_game(game, dur=50):
             txt,
             fill=BLACK,
         )
+    draw.ellipse(
+        box(STONE_SIZE-4, STONE_SIZE-4, pix((0,BOARD_SIZE+1))),
+        outline=BLACK,
+        fill=BLACK,
+    )
+    draw.ellipse(
+        box(STONE_SIZE-4, STONE_SIZE-4, pix((BOARD_SIZE//2+1,BOARD_SIZE+1))),
+        outline=BLACK,
+        fill=WHITE,
+    )
+    text_lift = .2
+    draw.text(pix((1,BOARD_SIZE+1-text_lift)), game.b_ai.name, fill=BLACK)
+    draw.text(pix((BOARD_SIZE//2+2,BOARD_SIZE+1-text_lift)), game.w_ai.name, fill=BLACK)
 
     ims = [base]
     moves = [(m[0], m[1], game.moves+2) for m in game.board if m[0]] + \

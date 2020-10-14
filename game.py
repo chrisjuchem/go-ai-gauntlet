@@ -1,4 +1,5 @@
 from draw import draw_game
+from ai import RandomAI
 
 class BoardIter:
     def __init__(self, board):
@@ -35,14 +36,14 @@ class Board:
 
 
 class Game:
-    def __init__(self, b_ai=None, w_ai=None, size=19):
+    def __init__(self, b_cls=RandomAI, w_cls=RandomAI, size=19):
         self.board = Board(size)
         self.ko = None
         self.w_prisoners = []
         self.b_prisoners = []
         self.moves = 0
-        self.b_ai = b_ai
-        self.w_ai = w_ai
+        self.b_ai = b_cls(self, 1)
+        self.w_ai = w_cls(self, 1)
         self.size = size #remove
         self.komi = 6.5
         self.passes = 0
@@ -75,9 +76,25 @@ class Game:
             ns.append((pt[0], pt[1]+1))
         return ns
 
+    def total_domination(self):
+        # end game if all of someone's stones are captured
+        if self.moves < 2:
+            return False
+        b = False
+        w = False
+        for stone, _ in self.board:
+            if stone:
+                if stone % 2 == 1:
+                    b = True
+                else:
+                    w = True
+                if b and w:
+                    return False
+        return True
+
     def autoplay(self):
-        while self.passes < 2:
-            (self.b_ai if self.moves % 2 == 1 else self.w_ai).move(self)
+        while self.passes < 2 and not self.total_domination():
+            (self.b_ai if self.moves % 2 == 1 else self.w_ai).move()
         print("Game over: {}".format(self.score()))
         print("{} moves".format(self.moves))
 

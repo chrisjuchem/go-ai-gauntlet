@@ -2,54 +2,58 @@ from draw import draw_game
 import random
 import itertools
 
-class HumanAI:
-    def move(self, game):
+class AI:
+    def __init__(self, game, color):
+        self.game = game
+        self.color = color # 0 or 1
+
+
+class HumanAI(AI):
+    def move(self):
         inp = input("{} to move: ".format(
-            "Black" if game.moves % 2 == 0 else "White"
+            "Black" if self.game.moves % 2 == 0 else "White"
         ))
         if inp == "pic":
-            draw_game(game)
-            return self.move(game)
+            draw_game(self.game)
+            return self.move(self.game)
         parts = inp.split(" ")
         x = int(parts[0]) - 1
         y = int(parts[1]) - 1
-        game.move(x, y)
-        
-class RandomAI:
-    def passs(self, game):
-        # give up if the game has progressed and all of someone's stones are captures
-        if game.moves < 2:
-            return False
-        b = False
-        w = False
-        for stone, _ in game.board:
-            if stone:
-                if stone % 2 == 1:
-                    b = True
-                else:
-                    w = True
-                if b and w:
-                    return False
+        self.game.move(x, y)
+
+
+class HeuristicAI(AI):
+    def candidate(self, mv):
+        """
+        Calculated on all moves to reject moves before priority calculation
+        Implement this over `reject` if calculating `priority` is more expensive
+        """
         return True
 
-    def move(self, game):
-        if self.passs(game):
-            game.passs()
-            return
-        i=0
-        while i<15:
-            i+=1
-            x = random.randrange(game.size)
-            y = random.randrange(game.size)
-            if game.move(x, y):
-                # print(i, " attempts")
-                return
-        i=0
-        allmoves = [pt for m, pt in game.board if m is None]
+    def priority(self, mv):
+        """
+        Assign a score to each move. Lower is better. Ties broken randomly.
+        """
+        return 1
+
+    def reject(self, mv):
+        """
+        Calculated on one move at a time in priority oreder only until a move is found
+        Implement this over `candidate` if this is more expensive than `priority`
+        """
+        return False
+
+    def move(self):
+        allmoves = [pt for m, pt in self.game.board if m is None and self.candidate(pt)]
         random.shuffle(allmoves)
+        allmoves.sort(key=self.priority)
         for mv in allmoves:
-            i+=1
-            if game.move(mv[0], mv[1]):
-                # print(i, " brute force attempts")
+            if not self.reject(mv) and self.game.move(mv[0], mv[1]):
                 return
-        game.passs()
+        self.game.passs()
+
+
+class RandomAI(HeuristicAI):
+    name = "random-ai"
+
+ALL = [RandomAI]
