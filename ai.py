@@ -2,6 +2,7 @@ from draw import draw_game
 import random
 import itertools
 from debug import debug
+from leela import Leela
 
 class AI:
     def __init__(self, game, color):
@@ -19,7 +20,7 @@ class HumanAI(AI):
         parts = inp.split(" ")
         x = int(parts[0]) - 1
         y = int(parts[1]) - 1
-        self.game.move(x, y)
+        self.game.move((x, y))
 
 
 class HeuristicAI(AI):
@@ -50,7 +51,7 @@ class HeuristicAI(AI):
         allmoves.sort(key=self.priority)
         debug("sort done")
         for mv in allmoves:
-            if not self.reject(mv) and self.game.move(mv[0], mv[1]):
+            if not self.reject(mv) and self.game.move((mv[0], mv[1])):
                 return
         self.game.passs()
 
@@ -79,4 +80,33 @@ class ReverseAlphabeticalAI(AlphabeticalAI):
         return super(ReverseAlphabeticalAI, self).priority(mv) * -1 
 
 
-ALL = [RandomAI, OddDiagonalAI, EvenDiagonalAI, AlphabeticalAI]
+
+class LeelaAI(AI):
+    name = "leela"
+    letters = "ABCDEFGHJKLMNOPQRST"
+
+    def __init__(self, game, color):
+        super(LeelaAI, self).__init__(game, color)
+        self.color_str = "black" if self.color % 2 == 1 else "white"
+        self.oppo_str = "black" if self.color % 2 == 0 else "white"
+        self.engine = Leela()
+
+    def tuple_to_string(self, mv):
+        return "{}{}".format(self.letters[mv[0]], mv[1] + 1)
+        
+    def string_to_tuple(self, mv):
+        return self.letters.find(mv[0]), int(mv[1:]) - 1
+
+    def move(self):
+        if self.game.last_move:
+            last_move = "{} {}".format(self.oppo_str, self.tuple_to_string(self.game.last_move))
+            print(last_move)
+            if self.engine.cmd("last_move") != last_move:
+                self.engine.cmd("play " + last_move)
+        mv = self.engine.cmd("genmove "+self.color_str)
+        if mv == "pass":
+            self.game.passs()
+        else:
+            self.game.move(self.string_to_tuple(mv))
+
+ALL = [RandomAI, OddDiagonalAI, EvenDiagonalAI, AlphabeticalAI, LeelaAI]

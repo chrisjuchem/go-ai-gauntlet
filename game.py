@@ -43,6 +43,7 @@ class Game:
         self.w_prisoners = []
         self.b_prisoners = []
         self.moves = 0
+        self.last_move = None
         self.b_ai = b_cls(self, 1)
         self.w_ai = w_cls(self, 1)
         self.size = size #remove
@@ -103,9 +104,11 @@ class Game:
     def passs(self):
         self.moves += 1
         self.passes += 1
+        self.last_move = "pass"
 
-    def move(self, x, y):
+    def move(self, mv):
         "Returns: successful move "
+        x, y = mv
         if self.board[x][y]:
             return False
             # raise RuntimeError("Point taken")
@@ -142,6 +145,7 @@ class Game:
             prisoners.append((self.board[c], c, self.moves))
             self.board[c] = None
         self.passes = 0
+        self.last_move = (x, y)
         return True
 
     # need somthing else to figure out if the game is over, this counts 1 eye groups as alive
