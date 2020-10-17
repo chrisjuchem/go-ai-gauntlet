@@ -53,7 +53,7 @@ def draw_game(game, dur=50):
     for p in starpoints(BOARD_SIZE):
         draw.ellipse(box(4,4,pix(p)), BLACK)
     for txt, pt in [(str(BOARD_SIZE-n), (BOARD_SIZE, n)) for n in range(BOARD_SIZE)] + \
-            [(string.ascii_uppercase[n], (n, BOARD_SIZE)) for n in range(BOARD_SIZE)]:
+            [("ABCDEFGHJKLMNOPQRST"[n], (n, BOARD_SIZE)) for n in range(BOARD_SIZE)]:
         center = pix(pt)
         text_offset = draw.textsize(txt)
         draw.text(

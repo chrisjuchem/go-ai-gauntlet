@@ -1,13 +1,14 @@
 from draw import draw_game
 import random
 import itertools
-from debug import debug
+from debug import debug, info
 from leela import Leela
 
 class AI:
-    def __init__(self, game, color):
+    def init_game(self, game, color):
         self.game = game
         self.color = color # 0 or 1
+        return self
 
 class HumanAI(AI):
     def move(self):
@@ -85,28 +86,66 @@ class LeelaAI(AI):
     name = "leela"
     letters = "ABCDEFGHJKLMNOPQRST"
 
-    def __init__(self, game, color):
-        super(LeelaAI, self).__init__(game, color)
-        self.color_str = "black" if self.color % 2 == 1 else "white"
-        self.oppo_str = "black" if self.color % 2 == 0 else "white"
+    def __init__(self):
         self.engine = Leela()
 
+    def init_game(self, game, color):
+        super().init_game(game, color)
+        self.color_str = "black" if self.color % 2 == 1 else "white"
+        self.oppo_str = "black" if self.color % 2 == 0 else "white"
+        resp = self.engine.cmd("clear_board")
+        if resp == "":
+            info("Engine initialized")
+        else:
+            info("Engine initialization failed")
+        return self
+
     def tuple_to_string(self, mv):
-        return "{}{}".format(self.letters[mv[0]], mv[1] + 1)
+        if mv == "pass":
+            return "pass"
+        return "{}{}".format(self.letters[mv[0]], self.game.size - mv[1])
         
     def string_to_tuple(self, mv):
-        return self.letters.find(mv[0]), int(mv[1:]) - 1
+        return self.letters.find(mv[0]), self.game.size - int(mv[1:])
 
     def move(self):
+        self.ensure_current()
+        self.genmove()
+
+    def ensure_current(self):
         if self.game.last_move:
             last_move = "{} {}".format(self.oppo_str, self.tuple_to_string(self.game.last_move))
-            print(last_move)
             if self.engine.cmd("last_move") != last_move:
                 self.engine.cmd("play " + last_move)
+
+    def genmove(self):
         mv = self.engine.cmd("genmove "+self.color_str)
-        if mv == "pass":
+        if mv == "pass": #or mv == "resign":
             self.game.passs()
         else:
             self.game.move(self.string_to_tuple(mv))
 
-ALL = [RandomAI, OddDiagonalAI, EvenDiagonalAI, AlphabeticalAI, LeelaAI]
+class DilutedLeelaAI(LeelaAI):
+    def __init__(self, pct_leela, base=100):
+        super().__init__()
+        self.pct_leela = pct_leela
+        self.base = base
+        self.name = "{}%-leela".format(pct_leela*100/base)
+
+    def move(self):
+        self.ensure_current()
+        if random.randrange(self.base) < self.pct_leela:
+            self.genmove()
+        else:
+            allmoves = [pt for m, pt in self.game.board if m is None]
+            random.shuffle(allmoves)
+            for mv in allmoves:
+                if self.game.move((mv[0], mv[1])):
+                    self.engine.cmd("play {} {}".format(self.color, self.tuple_to_string(mv)))
+                    return
+            self.engine.cmd("play {} pass".format(self.color))
+            self.game.passs()
+
+
+
+ALL = [RandomAI, OddDiagonalAI, EvenDiagonalAI, AlphabeticalAI, LeelaAI, DilutedLeelaAI]

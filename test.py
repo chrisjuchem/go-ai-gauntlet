@@ -3,7 +3,7 @@ import ai
 from draw import draw_game
 
 SIZE = 19
-g = Game(ai.LeelaAI, ai.RandomAI, size=SIZE)
+g = Game(ai.LeelaAI(), ai.DilutedLeelaAI(999, 1000), size=SIZE)
 
 try:
     g.autoplay()
@@ -13,6 +13,6 @@ try:
 except KeyboardInterrupt as k:
     print("drawing partial game")
     draw_game(g,
-        dur=1000
+        # dur=1000
     )
     # raise k

@@ -1,6 +1,6 @@
 from draw import draw_game
 from ai import RandomAI
-from debug import debug
+from debug import debug, info
 
 class BoardIter:
     def __init__(self, board):
@@ -37,15 +37,15 @@ class Board:
 
 
 class Game:
-    def __init__(self, b_cls=RandomAI, w_cls=RandomAI, size=19):
+    def __init__(self, b_ai=RandomAI(), w_ai=RandomAI(), size=19):
         self.board = Board(size)
         self.ko = None
         self.w_prisoners = []
         self.b_prisoners = []
         self.moves = 0
         self.last_move = None
-        self.b_ai = b_cls(self, 1)
-        self.w_ai = w_cls(self, 1)
+        self.b_ai = b_ai.init_game(self, 1)
+        self.w_ai = w_ai.init_game(self, 0)
         self.size = size #remove
         self.komi = 6.5
         self.passes = 0
@@ -96,7 +96,7 @@ class Game:
 
     def autoplay(self):
         while self.passes < 2 and self.moves < 2000 and not self.total_domination():
-            debug(self.moves)
+            info(self.moves)
             (self.b_ai if self.moves % 2 == 0 else self.w_ai).move()
         print("Game over: {}".format(self.score()))
         print("{} moves".format(self.moves))
