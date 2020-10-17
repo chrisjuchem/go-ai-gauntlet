@@ -80,6 +80,16 @@ class ReverseAlphabeticalAI(AlphabeticalAI):
     def priority(self, mv):
         return super(ReverseAlphabeticalAI, self).priority(mv) * -1 
 
+class CenterAI(HeuristicAI):
+    name = "center"
+    def priority(self, mv):
+        center = self.game.size//2
+        return abs(mv[0] - center) + abs(mv[1] - center)
+
+class AntiCenterAI(CenterAI):
+    name = "anti-center"
+    def priority(self, mv):
+        return super().priority(mv) * -1
 
 
 class LeelaAI(AI):
