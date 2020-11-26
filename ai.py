@@ -3,17 +3,18 @@ import random
 import itertools
 from debug import debug, info
 from leela import Leela
+from constants import *
 
 class AI:
     def init_game(self, game, color):
         self.game = game
-        self.color = color # 0 or 1
+        self.color = color
         return self
 
 class HumanAI(AI):
     def move(self):
         inp = input("{} to move: ".format(
-            "Black" if self.game.moves % 2 == 0 else "White"
+            "Black" if self.color == BLACK else "White"
         ))
         if inp == "pic":
             draw_game(self.game)
@@ -46,7 +47,7 @@ class HeuristicAI(AI):
         return False
 
     def move(self):
-        allmoves = [pt for m, pt in self.game.board if m is None and self.candidate(pt)]
+        allmoves = [pt for c, pt in self.game.board if c == EMPTY and self.candidate(pt)]
         debug("candidates done")
         random.shuffle(allmoves)
         allmoves.sort(key=self.priority)
@@ -83,7 +84,7 @@ class ReverseAlphabeticalAI(AlphabeticalAI):
 class CenterAI(HeuristicAI):
     name = "center"
     def priority(self, mv):
-        center = self.game.size//2
+        center = self.game.board.size//2
         return abs(mv[0] - center) + abs(mv[1] - center)
 
 class AntiCenterAI(CenterAI):
@@ -101,8 +102,8 @@ class LeelaAI(AI):
 
     def init_game(self, game, color):
         super().init_game(game, color)
-        self.color_str = "black" if self.color % 2 == 1 else "white"
-        self.oppo_str = "black" if self.color % 2 == 0 else "white"
+        self.color_str = "black" if self.color == BLACK else "white"
+        self.oppo_str = "black" if self.color == WHITE else "white"
         resp = self.engine.cmd("clear_board")
         if resp == "":
             info("Engine initialized")
@@ -111,22 +112,26 @@ class LeelaAI(AI):
         return self
 
     def tuple_to_string(self, mv):
-        if mv == "pass":
-            return "pass"
-        return "{}{}".format(self.letters[mv[0]], self.game.size - mv[1])
+        if mv == PASS:
+            return PASS
+        return "{}{}".format(self.letters[mv[0]], self.game.board.size - mv[1])
         
     def string_to_tuple(self, mv):
-        return self.letters.find(mv[0]), self.game.size - int(mv[1:])
+        if mv == PASS:
+            return PASS
+        return self.letters.find(mv[0]), self.game.board.size - int(mv[1:])
 
     def move(self):
         self.ensure_current()
         self.genmove()
 
-    def ensure_current(self):
-        if self.game.last_move:
-            last_move = "{} {}".format(self.oppo_str, self.tuple_to_string(self.game.last_move))
-            if self.engine.cmd("last_move") != last_move:
-                self.engine.cmd("play " + last_move)
+    def ensure_current(self, hist_idx=-1):
+        if len(self.game.history) < -hist_idx or self.game.history[hist_idx].color == self.color:
+            return
+        self.ensure_current(hist_idx-1)
+
+        last_move = "{} {}".format(self.oppo_str, self.tuple_to_string(self.game.history[hist_idx].pt))
+        self.engine.cmd("play " + last_move)
 
     def genmove(self):
         mv = self.engine.cmd("genmove "+self.color_str)
@@ -147,13 +152,13 @@ class DilutedLeelaAI(LeelaAI):
         if random.randrange(self.base) < self.pct_leela:
             self.genmove()
         else:
-            allmoves = [pt for m, pt in self.game.board if m is None]
+            allmoves = [pt for m, pt in self.game.board if m == EMPTY]
             random.shuffle(allmoves)
             for mv in allmoves:
                 if self.game.move((mv[0], mv[1])):
-                    self.engine.cmd("play {} {}".format(self.color, self.tuple_to_string(mv)))
+                    self.engine.cmd("play {} {}".format(self.color_str, self.tuple_to_string(mv)))
                     return
-            self.engine.cmd("play {} pass".format(self.color))
+            self.engine.cmd("play {} pass".format(self.color_str))
             self.game.passs()
 
 
