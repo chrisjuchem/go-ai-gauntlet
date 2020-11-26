@@ -1,10 +1,10 @@
 DEBUG = False
 INFO = True
 
-def info(txt):
+def info(*txt):
     if INFO:
-        print(txt)
+        print(*txt)
 
-def debug(txt):
+def debug(*txt):
     if DEBUG:
-        print(txt)
+        print(*txt)

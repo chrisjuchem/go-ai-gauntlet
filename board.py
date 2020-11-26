@@ -82,7 +82,7 @@ class Board:
                 if len(nc.libs) == 0:
                     caps.update(nc.pts) # (PushPoints) #3
                     self.clear_group(nc)
-        new_ko = pt if len(caps) == 1 else None
+        new_ko = self.to_2d(list(caps)[0]) if len(caps) == 1 else None
         if len(c.libs) == 0:
             self.clear_group(c)
             caps.update(c.pts) # we dont count prisoners so we can just combine these for drawing

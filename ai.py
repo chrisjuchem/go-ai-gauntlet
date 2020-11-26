@@ -22,7 +22,28 @@ class HumanAI(AI):
         parts = inp.split(" ")
         x = int(parts[0]) - 1
         y = int(parts[1]) - 1
-        self.game.move((x, y))
+        self.game.move((x, y), self.color)
+
+
+class MixedAI(AI):
+    def __init__(self, primary, secondary, pct_primary, base=100):
+        super().__init__()
+        self.primary = primary
+        self.secondary = secondary
+        self.pct_primary = pct_primary
+        self.base = base
+        self.name = "{}%-{}-({})".format(pct_primary*100/base, primary.name, secondary.name)
+
+    def init_game(self, game, color):
+        self.primary.init_game(game, color)
+        self.secondary.init_game(game, color)
+        return self
+
+    def move(self):
+        if random.randrange(self.base) < self.pct_primary:
+            self.primary.move()
+        else:
+            self.secondary.move()
 
 
 class HeuristicAI(AI):
@@ -48,12 +69,12 @@ class HeuristicAI(AI):
 
     def move(self):
         allmoves = [pt for c, pt in self.game.board if c == EMPTY and self.candidate(pt)]
-        debug("candidates done")
+        # debug("candidates done")
         random.shuffle(allmoves)
         allmoves.sort(key=self.priority)
-        debug("sort done")
+        # debug("sort done")
         for mv in allmoves:
-            if not self.reject(mv) and self.game.move((mv[0], mv[1])):
+            if not self.reject(mv) and self.game.move((mv[0], mv[1]), self.color):
                 return
         self.game.passs()
 
@@ -102,8 +123,6 @@ class LeelaAI(AI):
 
     def init_game(self, game, color):
         super().init_game(game, color)
-        self.color_str = "black" if self.color == BLACK else "white"
-        self.oppo_str = "black" if self.color == WHITE else "white"
         resp = self.engine.cmd("clear_board")
         if resp == "":
             info("Engine initialized")
@@ -126,41 +145,23 @@ class LeelaAI(AI):
         self.genmove()
 
     def ensure_current(self, hist_idx=-1):
-        if len(self.game.history) < -hist_idx or self.game.history[hist_idx].color == self.color:
+        if len(self.game.history) < -hist_idx:
             return
-        self.ensure_current(hist_idx-1)
 
-        last_move = "{} {}".format(self.oppo_str, self.tuple_to_string(self.game.history[hist_idx].pt))
-        self.engine.cmd("play " + last_move)
+        mv = self.game.history[hist_idx]
+        last_move = "{} {}".format(GET_COLOR_STRING(mv.color), self.tuple_to_string(mv.pt))
+        if self.engine.cmd("last_move") == last_move:
+            return
+        else:
+            self.ensure_current(hist_idx-1)
+            self.engine.cmd("play " + last_move)
 
     def genmove(self):
-        mv = self.engine.cmd("genmove "+self.color_str)
+        mv = self.engine.cmd("genmove "+GET_COLOR_STRING(self.color))
         if mv == "pass": #or mv == "resign":
             self.game.passs()
         else:
-            self.game.move(self.string_to_tuple(mv))
-
-class DilutedLeelaAI(LeelaAI):
-    def __init__(self, pct_leela, base=100):
-        super().__init__()
-        self.pct_leela = pct_leela
-        self.base = base
-        self.name = "{}%-leela".format(pct_leela*100/base)
-
-    def move(self):
-        self.ensure_current()
-        if random.randrange(self.base) < self.pct_leela:
-            self.genmove()
-        else:
-            allmoves = [pt for m, pt in self.game.board if m == EMPTY]
-            random.shuffle(allmoves)
-            for mv in allmoves:
-                if self.game.move((mv[0], mv[1])):
-                    self.engine.cmd("play {} {}".format(self.color_str, self.tuple_to_string(mv)))
-                    return
-            self.engine.cmd("play {} pass".format(self.color_str))
-            self.game.passs()
+            self.game.move(self.string_to_tuple(mv), self.color)
 
 
-
-ALL = [RandomAI, OddDiagonalAI, EvenDiagonalAI, AlphabeticalAI, LeelaAI, DilutedLeelaAI]
+ALL = [RandomAI, OddDiagonalAI, EvenDiagonalAI, AlphabeticalAI, LeelaAI]

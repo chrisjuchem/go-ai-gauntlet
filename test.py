@@ -1,11 +1,11 @@
 from game import Game
-import ai
+from ai import *
 from draw import draw_game
 from board import Board
 
 SIZE = 19
-b = ai.DilutedLeelaAI(35)
-w = ai.DilutedLeelaAI(25)
+b = AlphabeticalAI()
+w = EvenDiagonalAI()
 g = Game(b, w, size=SIZE)
 
 try:

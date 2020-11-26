@@ -29,7 +29,10 @@ class Leela:
 
     def cmd(self, command, wait=True, print_all=False):
         self.cmdno += 1
-        self.process.stdin.write("{} {}\n".format(self.cmdno, command))
+        full_cmd = "{} {}\n".format(self.cmdno, command)
+        self.process.stdin.write(full_cmd)
+        if print_all:
+            info(full_cmd)
         while wait:
             if self.process.poll() is not None:
                 raise RuntimeError("Leela failed :(")

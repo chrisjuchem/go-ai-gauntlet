@@ -35,25 +35,24 @@ class Game:
         to_move = (self.moves % 2) + 1
         self.history.append(Move(to_move, PASS, []))
 
-    def move(self, mv):
+    def move(self, mv, color):
         """Returns: (bool) successful move"""
         if self.board[mv]:
+            debug("Point taken")
             return False
-            # raise RuntimeError("Point taken")
         if mv == self.ko:
+            debug("Ko move: {}".format(mv))
             return False
-            # raise RuntimeError("Ko move")
         
-        to_move = (self.moves % 2) + 1
-        caps, self.ko = self.board.move(mv, to_move)
+        caps, self.ko = self.board.move(mv, color)
 
         h = self.board.hash()
         if h == self.prev_state:
             # TODO implement undo and have this work for all cases (self.ko = 2 move ago, this = 1)
+            debug ("Positional Super-ko violation")
             return False
-            # raise RuntimeError("Positional Super-ko violation")
 
-        self.history.append(Move(to_move, mv, caps))
+        self.history.append(Move(color, mv, caps))
         self.prev_state = h
         return True
 
