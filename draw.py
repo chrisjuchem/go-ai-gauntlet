@@ -39,7 +39,7 @@ def starpoints(sz):
         ]
     return pts
 
-def draw_game(game, dur=50):
+def draw_game(game, dur=50, filename="gif"):
     BOARD_SIZE = game.board.size
     img_size = (STONE_SIZE * (BOARD_SIZE + 1), STONE_SIZE * (BOARD_SIZE + 2))
     base = Image.new("P", img_size, (235,222,151))
@@ -108,4 +108,4 @@ def draw_game(game, dur=50):
             new_im.paste(patch, size)
 
     ims += [ims[-1]] * ceil(5000/dur)
-    base.save("gif.gif", save_all=True, append_images=ims, duration=dur, loop=0)
+    base.save("{}.gif".format(filename), save_all=True, append_images=ims, duration=dur, loop=0)

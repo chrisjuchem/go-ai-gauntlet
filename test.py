@@ -4,8 +4,8 @@ from draw import draw_game
 from board import Board
 
 SIZE = 19
-b = AlphabeticalAI()
-w = EvenDiagonalAI()
+b = RandomAI()
+w = RandomAI()
 g = Game(b, w, size=SIZE)
 
 try:

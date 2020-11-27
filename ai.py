@@ -11,6 +11,16 @@ class AI:
         self.color = color
         return self
 
+class WithSettings:
+    @classmethod
+    def _inst_ais(cls, args):
+        return map(lambda arg: arg() if isinstance(arg, type) and issubclass(arg, AI) else arg, args)
+
+    @classmethod
+    def with_settings(cls, *args):
+        return lambda: cls(*cls._inst_ais(args))
+
+
 class HumanAI(AI):
     def move(self):
         inp = input("{} to move: ".format(
@@ -25,7 +35,7 @@ class HumanAI(AI):
         self.game.move((x, y), self.color)
 
 
-class MixedAI(AI):
+class MixedAI(AI, WithSettings):
     def __init__(self, primary, secondary, pct_primary, base=100):
         super().__init__()
         self.primary = primary
@@ -35,6 +45,7 @@ class MixedAI(AI):
         self.name = "{}%-{}-({})".format(pct_primary*100/base, primary.name, secondary.name)
 
     def init_game(self, game, color):
+        super().init_game(game, color)
         self.primary.init_game(game, color)
         self.secondary.init_game(game, color)
         return self
@@ -80,7 +91,7 @@ class HeuristicAI(AI):
 
 
 class RandomAI(HeuristicAI):
-    name = "random-ai"
+    name = "random"
 
 class OddDiagonalAI(HeuristicAI):
     name = "odd-diagonal"
@@ -163,5 +174,3 @@ class LeelaAI(AI):
         else:
             self.game.move(self.string_to_tuple(mv), self.color)
 
-
-ALL = [RandomAI, OddDiagonalAI, EvenDiagonalAI, AlphabeticalAI, LeelaAI]

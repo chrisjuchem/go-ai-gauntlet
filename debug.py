@@ -1,5 +1,5 @@
 DEBUG = False
-INFO = True
+INFO = False
 
 def info(*txt):
     if INFO:

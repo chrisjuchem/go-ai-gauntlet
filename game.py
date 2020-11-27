@@ -26,10 +26,12 @@ class Game:
 
     def autoplay(self):
         while not self.two_passes() and self.moves < 2000 and not self.total_domination():
-            info(self.moves)
+            debug(self.moves)
             (self.b_ai if self.moves % 2 == 0 else self.w_ai).move()
-        print("Game over: {}".format(self.score()))
-        print("{} moves".format(self.moves))
+        score = self.score()
+        info("Game over: {}".format(score))
+        info("{} moves".format(self.moves))
+        return score
 
     def passs(self):
         to_move = (self.moves % 2) + 1
