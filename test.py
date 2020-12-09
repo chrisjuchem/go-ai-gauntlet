@@ -4,8 +4,8 @@ from draw import draw_game
 from board import Board
 
 SIZE = 19
-b = LeelaAI()
-w = LeelaAI()
+b = AlphabeticalAI()
+w = AlphabeticalAI()
 g = Game(b, w, size=SIZE)
 
 try:
