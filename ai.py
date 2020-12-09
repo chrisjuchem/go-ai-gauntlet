@@ -2,7 +2,7 @@ from draw import draw_game
 import random
 import itertools
 from debug import debug, info
-from leela import Leela
+from leela import Leela, LEELA_INST
 from constants import *
 
 class AI:
@@ -130,7 +130,7 @@ class LeelaAI(AI):
     letters = "ABCDEFGHJKLMNOPQRST"
 
     def __init__(self):
-        self.engine = Leela()
+        self.engine = LEELA_INST
 
     def init_game(self, game, color):
         super().init_game(game, color)

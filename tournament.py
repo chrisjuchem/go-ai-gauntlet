@@ -9,8 +9,19 @@ Player = namedtuple("Player", ["id", "ai"])
 
 PLAYERS = {
     "00": RandomAI,
-    "01": CenterAI,
-    "02": MixedAI.with_settings(CenterAI, RandomAI, 50)
+    "01": OddDiagonalAI,
+    "02": EvenDiagonalAI,
+    "03": AlphabeticalAI,
+    "04": ReverseAlphabeticalAI,
+    "05": CenterAI,
+    "06": AntiCenterAI,
+
+    "70": LeelaAI,
+    # "71": MixedAI.with_settings(LeelaAI, RandomAI, 99),
+    # "72": MixedAI.with_settings(LeelaAI, RandomAI, 90),
+    "75": MixedAI.with_settings(LeelaAI, RandomAI, 50),
+    # "78": MixedAI.with_settings(LeelaAI, RandomAI, 10),
+    "79": MixedAI.with_settings(LeelaAI, RandomAI, 1),
 }
 # Need 2 instances of each AI to support mirror matches
 BPLAYERS = [Player(id, p_cls()) for id, p_cls in PLAYERS.items()]

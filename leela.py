@@ -45,3 +45,5 @@ class Leela:
 
     # def __del__(self):
     #     self.cmd("quit", wait=False)
+
+LEELA_INST = Leela()

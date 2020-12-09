@@ -37,6 +37,7 @@ class Board:
             ([WALL] + [EMPTY] * size) * size + \
             [WALL] * (size + 2)
         self.groups = [None] * ((size + 1) * (size + 2) + 1)
+        #TODO groups set
 
     def __iter__(self):
         return BoardIter(self)

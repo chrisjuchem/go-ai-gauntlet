@@ -29,8 +29,7 @@ class Game:
             debug(self.moves)
             (self.b_ai if self.moves % 2 == 0 else self.w_ai).move()
         score = self.score()
-        info("Game over: {}".format(score))
-        info("{} moves".format(self.moves))
+        info("Game over: {} ({} moves)".format(score, self.moves))
         return score
 
     def passs(self):
